@@ -6,13 +6,6 @@ from keras.layers import (
     MaxPool2D, 
     BatchNormalization
     )
-# from keras import Model
-
-
-# from ..loss.loss import loss_exp
-
-#input examplar size : 127x127x3
-#input search size : 255x255x3 
 
 def AlexConv2d(x, filters, size, strides, batch_norm=True, padding='valid', name=""):
 
@@ -22,6 +15,7 @@ def AlexConv2d(x, filters, size, strides, batch_norm=True, padding='valid', name
 
     x = BatchNormalization()(x)
 
+    #convloultional Alexnet has not ReLu at conv5
     if name !='conv5':
         x = ReLU()(x)
 
@@ -31,8 +25,6 @@ def AlexConv2d(x, filters, size, strides, batch_norm=True, padding='valid', name
 def convolutional_alexnet(input):
 
     net = input
-
-    print(net.shape)
 
     #layer 1
     net = AlexConv2d(net, 96, 11, 2, 'conv1')
