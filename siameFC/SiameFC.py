@@ -4,7 +4,15 @@ from keras.layers import (
     Input,
     Lambda,
 )
-import backbone.convolutional_alexnet as alexnet
+import siameFC.convolutional_alexnet as alexnet
+
+"""
+ modify
+    this model have to work type double.
+    but Why? -> 
+
+"""
+
 
 def make_score_map(x):
 
@@ -39,7 +47,7 @@ def siameFc_model(x_shape, z_shape):
     inputs = [search, exemplar]
 
 
-    model = Model(inputs=inputs, outputs=outputs)
+    model = Model(inputs, outputs)
 
     return model
 
