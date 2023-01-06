@@ -11,11 +11,14 @@ import siameFC.convolutional_alexnet as alexnet
     this model have to work type double.
     but Why? -> 
 
+    why correct dim ?
+    
 """
 
-
 def make_score_map(x):
-
+    
+    #for correct dim
+    # dim : b * h * w * c
     def _translation_match(i):
         x, z = i[0], i[1]
         x = tf.expand_dims(x, 0)  
@@ -27,7 +30,7 @@ def make_score_map(x):
     return output
 
 
-
+# add Lambda layer (correlation)
 def score_map_layer():
     return Lambda(make_score_map, output_shape=(17, 17))
     
