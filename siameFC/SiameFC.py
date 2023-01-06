@@ -1,10 +1,12 @@
 import tensorflow as tf
+import siameFC.convolutional_alexnet as alexnet
+
 from keras.models import Model
 from keras.layers import (
     Input,
     Lambda,
 )
-import siameFC.convolutional_alexnet as alexnet
+
 
 """
  modify
