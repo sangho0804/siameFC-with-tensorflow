@@ -1,40 +1,68 @@
 import numpy as np
-
 from math import ceil
 from keras.utils import img_to_array, load_img
 from math import sqrt
 
 # for image load & make img list
-def load_images(directory, name_list, dimension, n_images):
+def load_images(directory, name_list, dimension, n_images, input='x'):
     """
         directory : image path
         name_list : A list of image names
-        dimesion : img target size
-                ex) siameFC have to z size : 127 127 3
-                    siameFC have to x size : 255 255 3
-        n_images : number of image
-
+        dimesion  : img target size
+                      ex) z size : 127 127 3
+                          x size : 255 255 3
+        n_images  : number of image
+        input     : x_image = 'x'
+                    z_image = 'z'
+                    
+        return img_array shape = (n_images, dim, dim, 3)
     """
 
     img_array = np.empty((n_images, dimension, dimension, 3))
     
-    for i in range(0, n_images):
-        img = load_img(directory + name_list[i], target_size=(dimension, dimension))
-        img_array[i] = img_to_array(img)
+    if input == 'z': #load z_images 
 
+        img = load_img(directory + name_list[0], target_size=(dimension, dimension))
+        img_array[0] = img_to_array(img)
+        img_array[:] = img_array[0] 
+
+    else: #load x_images
+
+        for i in range(0, n_images):
+            img = load_img(directory + name_list[i], target_size=(dimension, dimension))
+            img_array[i] = img_to_array(img)
+        
     return  img_array
 
 
-
-#make ground truth
+#make ground truth label processing
 """
     make label
     It need to modify.
 
 """
 
-def make_label(dim, radius):
+def make_ground_th_label(data_size, final_stride, dim, ground_th, org_img_sz, data):
+    
+    label = np.full((data_size, dim, dim), -1)
 
+    scale_x = org_img_sz[0] / 127
+    scale_y = org_img_sz[1] / 127
+
+    start_x = ground_th[:, 0] / final_stride / scale_x
+    start_y = ground_th[:, 1] / final_stride / scale_y
+    end_x = (ground_th[:, 4] / final_stride / scale_x) + 1
+    end_y = (ground_th[:, 5] / final_stride / scale_y) + 1
+
+    for i in range(0, data_size - 1):
+        label[i, int(start_x[i]) : int(end_x[i]), int(start_y[i]) : int(end_y[i])] = 1
+
+    label = label.astype(np.float32)
+    return label
+
+
+def make_label(dim, radius):
+    
     label = np.full((dim, dim), -1)
     center = int(dim / 2.0)
     start = center - ceil(radius)
@@ -45,7 +73,6 @@ def make_label(dim, radius):
             if euclidean_distance(i, j, center, center) <= radius:
                 label[i,j] = 1
     return label
-
 
 def euclidean_distance(x1, y1, x2, y2):
     return sqrt((x1 - x2)**2 + (y1 - y2)**2)

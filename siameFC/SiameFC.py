@@ -7,20 +7,8 @@ from keras.layers import (
     Lambda,
 )
 
-
-"""
- modify
-    this model have to work type double.
-    but Why? -> 
-
-    why correct dim ?
-    
-"""
-
 def make_score_map(x):
     
-    #for correct dim
-    # dim : b * h * w * c
     def _translation_match(i):
         x, z = i[0], i[1]
         x = tf.expand_dims(x, 0)  
