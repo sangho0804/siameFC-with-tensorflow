@@ -1,13 +1,14 @@
 import tensorflow as tf
 import os 
 import numpy as np
-import cv2
-
 from keras.utils import image_utils
+
+
 from siameFC.SiameFC import siameFc_model
 from siameFC.loss_of_scoreMap import loss_of_scoreMap
 from siameFC.utils import  load_images, make_ground_th_label
 
+tf.compat.v1.disable_eager_execution()
 
 Z_SHAPE = (127, 127, 3)
 X_SHAPE = (255, 255, 3)
@@ -31,11 +32,40 @@ data_size = len(os.listdir(x_dir)) #VOT car1 data_size : 742
 
 x_images = load_images(x_dir, x_name_lsit, 255, data_size, input='x')
 z_images = load_images(z_dir, z_name_lsit, 127, data_size, input='z')
-                
+
+#data normalization
+x_images = x_images / 255.
+z_images = z_images / 255.
+
 
 #ground truth
 ground_th_dir = "./sample/VOT19/car1/label/groundtruth.txt"
 ground_th = np.loadtxt(ground_th_dir, delimiter=',') #shape (742,8)
+
+
+response_size = 17 #score map size
+final_stride = 8 
+label = make_ground_th_label(data_size, final_stride, response_size, ground_th, org_img_size)
+
+#train start
+
+model = siameFc_model(X_SHAPE,Z_SHAPE)
+
+#model.summary()
+
+opt = tf.keras.optimizers.legacy.SGD( 
+         name='SGD', learning_rate= 0.0001
+        )
+
+        
+model.compile(optimizer=opt, loss=loss_of_scoreMap, metrics=['accuracy'])
+
+
+batch_size = 8 
+epochs = 50 
+model.fit([x_images, z_images], [label], batch_size=batch_size, epochs=epochs)
+
+#train end
 
 
 # #gt 를 17 17 로 맞춰줘야 한다.
@@ -64,29 +94,3 @@ ground_th = np.loadtxt(ground_th_dir, delimiter=',') #shape (742,8)
 # #좌표 설정
 
 # #slicing
-
-
-response_size = 17 #score map size
-final_stride = 8 
-label = make_ground_th_label(data_size, final_stride, response_size, ground_th, org_img_size, 'VOT')
-
-print(label.shape)
-
-model = siameFc_model(X_SHAPE,Z_SHAPE)
-
-#model.summary()
-
-
-opt = tf.keras.optimizers.SGD(
-        momentum=0.9, nesterov=False, name='SGD'
-        )
-
-
-        
-model.compile(optimizer=opt, loss=loss_of_scoreMap, metrics=['accuracy'])
-
-
-batch_size = 8 
-epochs = 50 
-model.fit([x_images, z_images], [label], batch_size=batch_size, epochs=epochs)
-

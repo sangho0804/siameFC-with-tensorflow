@@ -4,11 +4,14 @@ from keras.layers import (
     MaxPool2D, 
     BatchNormalization
     )
+import tensorflow as tf
 
 def AlexConv2d(x, filters, size, strides, padding='valid', group=1, conv5='false'):
     
     x = Conv2D(filters=filters, kernel_size=size,
-                strides=strides, padding=padding, groups=group)(x)
+                strides=strides, padding=padding, groups=group,
+                kernel_regularizer=tf.keras.regularizers.l2(l=0.001)
+                )(x)
 
 
     x = BatchNormalization(axis=3)(x)
