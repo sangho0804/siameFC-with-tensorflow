@@ -42,7 +42,6 @@ def siameFc_model(x_shape, z_shape):
 
     outputs = [score_map]
     inputs = [search, exemplar]
-    
 
     model = Model(inputs=inputs, outputs=outputs)
 

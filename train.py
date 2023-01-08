@@ -10,6 +10,7 @@ from siameFC.utils import  load_images, make_ground_th_label
 
 tf.compat.v1.disable_eager_execution()
 
+
 Z_SHAPE = (127, 127, 3)
 X_SHAPE = (255, 255, 3)
 
@@ -42,10 +43,9 @@ z_images = z_images / 255.
 ground_th_dir = "./sample/VOT19/car1/label/groundtruth.txt"
 ground_th = np.loadtxt(ground_th_dir, delimiter=',') #shape (742,8)
 
-
 response_size = 17 #score map size
 final_stride = 8 
-label = make_ground_th_label(data_size, final_stride, response_size, ground_th, org_img_size)
+label = make_ground_th_label(data_size, final_stride, response_size, ground_th, org_img_size) # shape 742 x 17 x 1
 
 #train start
 
@@ -54,14 +54,14 @@ model = siameFc_model(X_SHAPE,Z_SHAPE)
 #model.summary()
 
 opt = tf.keras.optimizers.legacy.SGD( 
-         name='SGD', learning_rate= 0.0001
+         name='SGD', learning_rate= 0.00001
         )
 
         
 model.compile(optimizer=opt, loss=loss_of_scoreMap, metrics=['accuracy'])
 
 
-batch_size = 8 
+batch_size = 8
 epochs = 50 
 model.fit([x_images, z_images], [label], batch_size=batch_size, epochs=epochs)
 

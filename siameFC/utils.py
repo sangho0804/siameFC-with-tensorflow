@@ -73,17 +73,18 @@ def make_ground_th_label(data_size, final_stride, dim, ground_th, org_img_sz):
     return label
 
 #make label without ground_th
-def make_label(dim, radius):
+def make_label(dim, radius, data_size):
     
-    label = np.full((dim, dim), -1)
+    label = np.full((data_size, dim, dim), -1)
     center = int(dim / 2.0)
     start = center - ceil(radius)
     end = center + ceil(radius)
-
-    for i in range(start, end + 1):
-        for j in range(start, end + 1):
-            if euclidean_distance(i, j, center, center) <= radius:
-                label[i,j] = 1
+    
+    for k in range(0, data_size-1):
+        for i in range(start, end + 1):
+            for j in range(start, end + 1):
+                if euclidean_distance(i, j, center, center) <= radius:
+                    label[k,i,j] = 1
     return label
 
 def euclidean_distance(x1, y1, x2, y2):
