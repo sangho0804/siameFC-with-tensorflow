@@ -3,7 +3,7 @@ import tensorflow as tf
 from math import ceil
 from keras.utils import img_to_array, load_img
 from math import sqrt
-
+from sklearn.preprocessing import MinMaxScaler
 
 # for image load & make img list
 def load_images(directory, name_list, dimension, n_images, input='x'):
@@ -36,7 +36,6 @@ def load_images(directory, name_list, dimension, n_images, input='x'):
         
     return  img_array
 
-
 #make ground truth label processing
 def make_ground_th_label(data_size, final_stride, dim, ground_th, org_img_sz):
 
@@ -52,7 +51,7 @@ def make_ground_th_label(data_size, final_stride, dim, ground_th, org_img_sz):
         becuase, left_top and right_bottom 
     '''
 
-    label = np.full((data_size, dim, dim), -1)
+    label = np.full((data_size, dim, dim), 0)
 
     #exampler size 127 * 127
     scale_x = org_img_sz[0] / 127
@@ -65,12 +64,35 @@ def make_ground_th_label(data_size, final_stride, dim, ground_th, org_img_sz):
     end_y = (ground_th[:, 5] / final_stride / scale_y) + 1
 
     #within range, inssert +1
-    for i in range(0, data_size - 1):
+    for i in range(0, data_size):
         label[i, int(start_x[i]) : int(end_x[i]), int(start_y[i]) : int(end_y[i])] = 1
-    
-    label = tf.convert_to_tensor(label, dtype=tf.float32)
 
     return label
+
+#make ground truth position label processing
+def make_bbox_label(data_size, ground_th):
+
+    '''
+        ground th value : x1, y1, x2, y2, x3, y3, x4, y4
+        we use (x1, y1), (x3, y3)
+        becuase, left_top and right_bottom 
+
+    '''
+
+    bbox = np.empty((data_size, 4))
+
+    #ground_th (x1, y1), (x3, y3) : left_top, right_bottom 
+
+    bbox[:, 0] = (ground_th[:, 0]) # left_top x 
+    bbox[:, 1] = (ground_th[:, 1]) # left_top y
+    bbox[:, 2] = (ground_th[:, 4]) # right_bottom x
+    bbox[:, 3] = (ground_th[:, 5]) # right_bottom y
+
+    scaler = MinMaxScaler()
+    bbox = scaler.fit_transform(bbox)
+
+    return bbox
+
 
 #make label without ground_th
 def make_label(dim, radius, data_size):
