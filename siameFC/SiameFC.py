@@ -11,15 +11,15 @@ from keras.layers import (
 #for make correlation score map
 def make_score_map(x):
     
-    def _translation_match(i):
-        x, z = i[0], i[1]
+    def _translation_match(x,z):
+
         x = tf.expand_dims(x, 0)   # H * W * C -> b * H * W * C
         z = tf.expand_dims(z, -1)  # H * W * C -> H * W * i_C * o_C
 
-        return tf.nn.conv2d(x, z, strides=[1, 1, 1, 1], padding='VALID')
+        return tf.nn.conv2d(x, z, strides=[1, 1, 1, 1], padding='VALID', name='translation_match')
 
-    output = tf.map_fn(_translation_match, x, dtype=tf.float32) # shape (None * 1 * 17 * 17 * 1)
-    output = tf.reshape(output, shape=(-1,17,17))  #reshape (b * 17 * 17)
+    output = tf.map_fn(lambda x : _translation_match(x[0], x[1]), x, dtype=tf.float32) # shape (None * 1 * 17 * 17 * 1)
+    output = tf.squeeze(output, [1, 4]) 
 
     return output
 

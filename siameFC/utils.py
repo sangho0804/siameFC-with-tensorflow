@@ -68,7 +68,7 @@ def make_ground_th_label(data_size, final_stride, dim, ground_th, org_img_sz):
     for i in range(0, data_size - 1):
         label[i, int(start_x[i]) : int(end_x[i]), int(start_y[i]) : int(end_y[i])] = 1
     
-    label = label.astype(np.float64)
+    label = tf.convert_to_tensor(label, dtype=tf.float32)
 
     return label
 

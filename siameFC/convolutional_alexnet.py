@@ -47,7 +47,6 @@ def convolutional_alexnet(input):
     #layer 5
     net = AlexConv2d(net, 256, 3, 1, group=2, conv5='true')
 
-
     return net
 
 
