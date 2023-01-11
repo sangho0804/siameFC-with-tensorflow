@@ -46,6 +46,7 @@ def siameFc_model(x_shape, z_shape, train='score'):
     inputs = [search, exemplar]
     
     #If train bbox, outputs shape = (batch, 4)
+    #output =  left top, right down = (x1,y1,x3,y3)
     if train =='gt':
         #position
         flatten = Flatten()(score_map)

@@ -4,7 +4,6 @@ from keras.layers import (
     MaxPool2D, 
     BatchNormalization
     )
-import tensorflow as tf
 
 def AlexConv2d(x, filters, size, strides, padding='valid', group=1, conv5='false'):
     

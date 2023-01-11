@@ -4,7 +4,7 @@ from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.framework import ops
 
-
+#logistic loss
 def logistic_fn(labels=None,logits=None):
 
     #convert tensor
@@ -27,8 +27,7 @@ def logistic_fn(labels=None,logits=None):
     return math_ops.log1p(math_ops.exp(neg_abs_logits))
 
 
-#loss function
-#use purposed loss
+#total loss function
 def loss_fn(y_true, y_pred):
     
     #use logistic_fn

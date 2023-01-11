@@ -43,27 +43,33 @@ def make_ground_th_label(data_size, final_stride, dim, ground_th, org_img_sz):
         reson of use scale :
         if ground_th_x1 = 320, 
         x1 = || a * final_stride * scale || ( 0 < a < 17 )
-        then, if a = 8 ( score_map center)
+        then, 
+        if a = 8 ( score_map center)
         x1 = 8 * 8 * scale ≒ 320
 
         ground th value : x1, y1, x2, y2, x3, y3, x4, y4
         we use (x1, y1), (x3, y3)
         becuase, left_top and right_bottom 
+
+        then, 
+        The value in the range is +1
+
+        retrurn : 
+        (data_size * 17 * 17) score map list
     '''
 
-    label = np.full((data_size, dim, dim), 0)
+    label = np.full((data_size, dim, dim), -1)
 
     #exampler size 127 * 127
     scale_x = org_img_sz[0] / 127
     scale_y = org_img_sz[1] / 127
 
-    #ground_th (x1, y1), (x3, y3) : left_top, right_bottom 
-    start_x = ground_th[:, 0] / final_stride / scale_x
-    start_y = ground_th[:, 1] / final_stride / scale_y
-    end_x = (ground_th[:, 4] / final_stride / scale_x) + 1
-    end_y = (ground_th[:, 5] / final_stride / scale_y) + 1
+    start_x = ground_th[:, 0] / final_stride / scale_x #left top x
+    start_y = ground_th[:, 1] / final_stride / scale_y #left top y
+    end_x = (ground_th[:, 4] / final_stride / scale_x) + 1 #right dowm x
+    end_y = (ground_th[:, 5] / final_stride / scale_y) + 1 #right dowm y
 
-    #within range, inssert +1
+    #within range, set +1
     for i in range(0, data_size):
         label[i, int(start_x[i]) : int(end_x[i]), int(start_y[i]) : int(end_y[i])] = 1
 
@@ -77,6 +83,10 @@ def make_bbox_label(data_size, ground_th):
         we use (x1, y1), (x3, y3)
         becuase, left_top and right_bottom 
 
+        each value has minmax norm
+
+        return :
+        (data_size * 4) bbox list
     '''
 
     bbox = np.empty((data_size, 4))
