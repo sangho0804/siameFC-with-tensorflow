@@ -11,6 +11,7 @@ from siameFC.utils import  load_images, make_ground_th_label, make_bbox_label
 tf.compat.v1.disable_eager_execution()
 
 
+
 #prameter
 Z_SHAPE = (127, 127, 3)
 X_SHAPE = (255, 255, 3)
@@ -75,18 +76,19 @@ model = siameFc_model(X_SHAPE,Z_SHAPE, train_label)
 opt = tf.keras.optimizers.legacy.SGD( 
          name='SGD', learning_rate= 0.0001
         )
-        
-# model.compile(optimizer=opt, loss=loss_fn, metrics=['accuracy']) # label : score
+
+      
+
+#model.compile(optimizer=opt, loss=loss_fn, metrics=['accuracy']) # label : score
 model.compile(optimizer=opt, loss='mse', metrics=['accuracy']) #label : gt
 
 #prameter
 batch_size = 8
-epochs = 50 
-
+epochs = 150
 
 model.fit([x_images, z_images], [label], batch_size=batch_size, epochs=epochs)
 
 #save weights
-model.save_weights('saved_weights02.h5')
+model.save_weights('saved_weights_gt_test.h5')
 
 #!----train end
