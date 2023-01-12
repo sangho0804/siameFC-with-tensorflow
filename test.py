@@ -87,15 +87,19 @@ model.compile(optimizer=opt, loss='mse', metrics=['accuracy']) #label : gt
 batch_size = 8
 epochs = 50 
 
-model.load_weights('saved_weights02.h5')
+model.load_weights('saved_weights_gt_test.h5')
 
 #model.fit([x_images, z_images], [label], batch_size=batch_size, epochs=epochs)
 
 #save weights
 #model.save_weights('saved_weights02.h5')
-y_evaluate = model.evaluate([x_test, z_test], label_test)
+y_evaluate = model.evaluate([x_test, z_test], label_test, batch_size=8)
+
+print("model evaluate >> loss : %f , acc : %f" % (y_evaluate[0], y_evaluate[1]))
 
 
-y_predict = model.predict([x_test, z_test])
 
 #!----train end
+
+#하하상상호호
+#valid set, metric Iou 정도?
