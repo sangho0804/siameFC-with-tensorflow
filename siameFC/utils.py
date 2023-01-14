@@ -1,9 +1,16 @@
 import numpy as np
 import tensorflow as tf
+
 from math import ceil
-from keras.utils import img_to_array, load_img
 from math import sqrt
+
 from sklearn.preprocessing import MinMaxScaler
+
+from keras.utils import img_to_array, load_img
+
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.framework import ops
 
 # for image load & make img list
 def load_images(directory, name_list, dimension, n_images, input='x'):
@@ -102,6 +109,41 @@ def make_bbox_label(data_size, ground_th):
     bbox = scaler.fit_transform(bbox)
 
     return bbox
+
+def IoU_metric(y_true, y_pred):
+
+    tf.keras.metrics.IoU
+
+    '''
+        custom metric IoU
+        single calss detection model
+        : ground_th metric has to IoU
+
+        y_true shape (b_size, 4) || 4 : (left_top_x, left_top_y, right_down_x, right_down_y)
+        y_pred shape (b_size, 4) || 4 : model out (b, 4) || 4 : danse(4) 
+                                 || pred((left_top_x, left_top_y, right_down_x, right_down_y))
+
+        IoU : intersection area / (predict box area + gt box area - intersection area)
+
+        return : 
+        IoU tensor
+    
+    '''
+    x, y =  y_pred.shape
+    gt_box_area = (y_true[:, 2] - y_true[:, 0]) * (y_true[:, 3] - y_true[:, 1]) 
+    pred_box_area = (y_pred[:, 2] - y_pred[:, 0]) * (y_pred[:, 3] - y_pred[:, 1])
+
+    #intersection
+
+    #position
+    inter_lt_x = np.max(y_true[:,0], y_pred[:,0], axis=1)
+    inter_lt_y = np.max(y_true[:,1], y_pred[:,1], axis=1)
+    inter_rd_x = np.max(y_true[:,2], y_pred[:,2], axis=1)
+    inter_rd_y = np.max(y_true[:,3], y_pred[:,3], axis=1)
+
+
+
+    return 0
 
 
 #make label without ground_th
