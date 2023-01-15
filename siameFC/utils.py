@@ -83,7 +83,7 @@ def make_ground_th_label(data_size, final_stride, dim, ground_th, org_img_sz):
     return label
 
 #make ground truth position label processing
-def make_bbox_label(data_size, ground_th):
+def make_bbox_label(data_size, ground_th, gt_val="corner"):
 
     '''
         ground th value : x1, y1, x2, y2, x3, y3, x4, y4
@@ -98,52 +98,105 @@ def make_bbox_label(data_size, ground_th):
 
     bbox = np.empty((data_size, 4))
 
-    #ground_th (x1, y1), (x3, y3) : left_top, right_bottom 
 
-    bbox[:, 0] = (ground_th[:, 0]) # left_top x 
-    bbox[:, 1] = (ground_th[:, 1]) # left_top y
-    bbox[:, 2] = (ground_th[:, 4]) # right_bottom x
-    bbox[:, 3] = (ground_th[:, 5]) # right_bottom y
+    if gt_val == 'corner' :
+        #ground_th (x1, y1), (x3, y3) : left_top, right_bottom 
+        for i in range(0, data_size):
 
-    scaler = MinMaxScaler()
-    bbox = scaler.fit_transform(bbox)
+            bbox[i, 0] = float(ground_th[i, 0]) / (ground_th[i, 4]- ground_th[i, 0]) # left_top x 
+            bbox[i, 1] = float(ground_th[i, 1]) / (ground_th[i, 5]- ground_th[i, 1]) # left_top y
+            bbox[i, 2] = float(ground_th[i, 4]) / (ground_th[i, 4]- ground_th[i, 0]) # right_bottom x
+            bbox[i, 3] = float(ground_th[i, 5]) / (ground_th[i, 5]- ground_th[i, 1]) # right_bottom y
+
+    if gt_val == 'center':
+        #ground_th (x,y,w,h)
+        for i in range(0, data_size):
+
+            bbox[i, 0] = float(ground_th[i,0] - (ground_th[i,2] / 2)) / ground_th[i,2] # left_top x
+            bbox[i, 1] = float(ground_th[i,1] - (ground_th[i,3] / 2)) / ground_th[i,3]# left_top y
+            bbox[i, 2] = float(ground_th[i,0] + (ground_th[i,2] / 2)) / ground_th[i,2]# right_bottom x
+            bbox[i, 3] = float(ground_th[i,1] + (ground_th[i,3] / 2)) / ground_th[i,3]# right_bottom y
+
+    # scaler = MinMaxScaler()
+    # bbox = scaler.fit_transform(bbox)
 
     return bbox
 
-def IoU_metric(y_true, y_pred):
-
-    tf.keras.metrics.IoU
-
-    '''
-        custom metric IoU
-        single calss detection model
-        : ground_th metric has to IoU
-
-        y_true shape (b_size, 4) || 4 : (left_top_x, left_top_y, right_down_x, right_down_y)
-        y_pred shape (b_size, 4) || 4 : model out (b, 4) || 4 : danse(4) 
-                                 || pred((left_top_x, left_top_y, right_down_x, right_down_y))
-
-        IoU : intersection area / (predict box area + gt box area - intersection area)
-
-        return : 
-        IoU tensor
+def calculate_iou(y_true, y_pred):
     
-    '''
-    x, y =  y_pred.shape
-    gt_box_area = (y_true[:, 2] - y_true[:, 0]) * (y_true[:, 3] - y_true[:, 1]) 
-    pred_box_area = (y_pred[:, 2] - y_pred[:, 0]) * (y_pred[:, 3] - y_pred[:, 1])
+    
+    """
+    Input:
+    Keras provides the input as numpy arrays with shape (batch_size, num_columns).
+    
+    Arguments:
+    y_true -- first box, numpy array with format [x, y, width, height, conf_score]
+    y_pred -- second box, numpy array with format [x, y, width, height, conf_score]
+    x any y are the coordinates of the top left corner of each box.
+    
+    Output: IoU of type float32. (This is a ratio. Max is 1. Min is 0.)
+    
+    """
+    results = []
+    
+    for i in range(0, y_true.shape[0]):
+    
+        # set the types so we are sure what type we are using
+        true_left_x = y_true[i,0] #* (y_true[i, 2]- y_true[i, 0])
+        true_left_y = y_true[i,1] # (y_true[i, 3]- y_true[i, 1])
+        true_right_x = y_true[i,2] #* (y_true[i, 2]- y_true[i, 0])
+        true_right_y = y_true[i,3] #* (y_true[i, 3]- y_true[i, 1])
 
-    #intersection
+        pred_left_x = y_pred[i,0] #* (y_pred[i, 2]- y_pred[i, 0])
+        pred_left_y = y_pred[i,1] #* (y_pred[i, 3]- y_pred[i, 1])
+        pred_right_x = y_pred[i,2] #* (y_pred[i, 2]- y_pred[i, 0])
+        pred_right_y = y_pred[i,3] #* (y_pred[i, 3]- y_pred[i, 1])
 
-    #position
-    inter_lt_x = np.max(y_true[:,0], y_pred[:,0], axis=1)
-    inter_lt_y = np.max(y_true[:,1], y_pred[:,1], axis=1)
-    inter_rd_x = np.max(y_true[:,2], y_pred[:,2], axis=1)
-    inter_rd_y = np.max(y_true[:,3], y_pred[:,3], axis=1)
+        print(pred_left_x,pred_left_y,pred_right_x,pred_right_y)
+        gt_box_area = ( (true_right_x) - true_left_x) * ( (true_right_y) - true_left_y) 
+        pred_box_area = ( (pred_left_y) - pred_left_x) * ( (pred_right_y) - pred_right_x)
+        print("gt :",gt_box_area)
+        print("pred:", pred_box_area)
+        # calculate the top left and bottom right coordinates for the intersection box, boxInt
+
+        # boxInt - top left coords
+        x_boxInt_tleft = np.max([ true_left_x, pred_left_x ])
+        y_boxInt_tleft = np.max([true_left_y, pred_left_y ]) # Version 2 revision
+
+        # boxInt - bottom right coords
+        x_boxInt_br = np.min([true_right_x,pred_right_x ])
+        y_boxInt_br = np.min([true_right_y,pred_right_y]) 
+
+        # Calculate the area of boxInt, i.e. the area of the intersection 
+        # between boxTrue and boxPred.
+        # The np.max() function forces the intersection area to 0 if the boxes don't overlap.
+        
+        
+        # Version 2 revision
+        area_of_intersection = np.max([0,(x_boxInt_br - x_boxInt_tleft)]) * np.max([0,(y_boxInt_br - y_boxInt_tleft)])
+
+        iou = area_of_intersection / ((gt_box_area + pred_box_area) - area_of_intersection)
 
 
+        # This must match the type used in py_func
+        iou = iou.astype(np.float32)
+        
+        # append the result to a list at the end of each loop
+        results.append(iou)
+    
+    # return the mean IoU score for the batch
+    return np.mean(results)
 
-    return 0
+
+def IoU(y_true, y_pred):
+    
+    # Note: the type float32 is very important. It must be the same type as the output from
+    # the python function above or you too may spend many late night hours 
+    # trying to debug and almost give up.
+    
+    iou = tf.py_function(calculate_iou, [y_true, y_pred], tf.float32)
+
+    return iou
 
 
 #make label without ground_th

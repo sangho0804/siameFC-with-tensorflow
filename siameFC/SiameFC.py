@@ -50,7 +50,8 @@ def siameFc_model(x_shape, z_shape, train='score'):
     if train =='gt':
         #position
         flatten = Flatten()(score_map)
-        gt_position = Dense(4, activation='sigmoid')(flatten)
+        gt_position = Dense(32, activation="relu")(flatten)
+        gt_position = Dense(4, activation='relu')(gt_position)
         outputs = [gt_position]
 
 
