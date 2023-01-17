@@ -9,160 +9,161 @@ from siameFC.losses import loss_fn
 from siameFC.utils import  load_images, make_ground_th_label, make_bbox_label
 import matplotlib.pyplot as plt
 import cv2
+from tensorflow.python.ops import array_ops
+from tensorflow.python.ops import math_ops
+from tensorflow.python.framework import ops
 tf.compat.v1.disable_eager_execution()
 
-def calculate_iou(y_true, y_pred):
+# def calculate_iou(y_true, y_pred):
     
     
-    """
-    Input:
-    Keras provides the input as numpy arrays with shape (batch_size, num_columns).
+#     """
+#     Input:
+#     Keras provides the input as numpy arrays with shape (batch_size, num_columns).
     
-    Arguments:
-    y_true -- first box, numpy array with format [x, y, width, height, conf_score]
-    y_pred -- second box, numpy array with format [x, y, width, height, conf_score]
-    x any y are the coordinates of the top left corner of each box.
+#     Arguments:
+#     y_true -- first box, numpy array with format [x, y, width, height, conf_score]
+#     y_pred -- second box, numpy array with format [x, y, width, height, conf_score]
+#     x any y are the coordinates of the top left corner of each box.
     
-    Output: IoU of type float32. (This is a ratio. Max is 1. Min is 0.)
+#     Output: IoU of type float32. (This is a ratio. Max is 1. Min is 0.)
     
-    """
+#     """
 
     
-    results = []
+#     results = []
     
-    for i in range(0,y_true.shape[0]):
+#     for i in range(0,y_true.shape[0]):
     
-        # set the types so we are sure what type we are using
-        y_true = y_true.astype(np.float32)
-        y_pred = y_pred.astype(np.float32)
+#         # set the types so we are sure what type we are using
+#         y_true = y_true.astype(np.float32)
+#         y_pred = y_pred.astype(np.float32)
 
 
-        # boxTrue
-        x_boxTrue_tleft = y_true[i,0]  # numpy index selection
-        y_boxTrue_tleft = y_true[i,1]
-        boxTrue_width = y_true[i,2]
-        boxTrue_height = y_true[i,3]
-        area_boxTrue = (boxTrue_width * boxTrue_height)
+#         # boxTrue
+#         x_boxTrue_tleft = y_true[i,0]  # numpy index selection
+#         y_boxTrue_tleft = y_true[i,1]
+#         boxTrue_width = y_true[i,2]
+#         boxTrue_height = y_true[i,3]
+#         area_boxTrue = (boxTrue_width * boxTrue_height)
 
-        # boxPred
-        x_boxPred_tleft = y_pred[i,0]
-        y_boxPred_tleft = y_pred[i,1]
-        boxPred_width = y_pred[i,2]
-        boxPred_height = y_pred[i,3]
-        area_boxPred = (boxPred_width * boxPred_height)
+#         # boxPred
+#         x_boxPred_tleft = y_pred[i,0]
+#         y_boxPred_tleft = y_pred[i,1]
+#         boxPred_width = y_pred[i,2]
+#         boxPred_height = y_pred[i,3]
+#         area_boxPred = (boxPred_width * boxPred_height)
 
-        print('true :', area_boxPred, area_boxTrue)
-        # calculate the bottom right coordinates for boxTrue and boxPred
+#         print('true :', area_boxPred, area_boxTrue)
+#         # calculate the bottom right coordinates for boxTrue and boxPred
 
-        # boxTrue
-        x_boxTrue_br = x_boxTrue_tleft + boxTrue_width
-        y_boxTrue_br = y_boxTrue_tleft + boxTrue_height # Version 2 revision
+#         # boxTrue
+#         x_boxTrue_br = x_boxTrue_tleft + boxTrue_width
+#         y_boxTrue_br = y_boxTrue_tleft + boxTrue_height # Version 2 revision
 
-        # boxPred
-        x_boxPred_br = x_boxPred_tleft + boxPred_width
-        y_boxPred_br = y_boxPred_tleft + boxPred_height # Version 2 revision
+#         # boxPred
+#         x_boxPred_br = x_boxPred_tleft + boxPred_width
+#         y_boxPred_br = y_boxPred_tleft + boxPred_height # Version 2 revision
 
 
-        # calculate the top left and bottom right coordinates for the intersection box, boxInt
+#         # calculate the top left and bottom right coordinates for the intersection box, boxInt
 
-        # boxInt - top left coords
-        x_boxInt_tleft = np.max([x_boxTrue_tleft,x_boxPred_tleft])
-        y_boxInt_tleft = np.max([y_boxTrue_tleft,y_boxPred_tleft]) # Version 2 revision
+#         # boxInt - top left coords
+#         x_boxInt_tleft = np.max([x_boxTrue_tleft,x_boxPred_tleft])
+#         y_boxInt_tleft = np.max([y_boxTrue_tleft,y_boxPred_tleft]) # Version 2 revision
 
-        # boxInt - bottom right coords
-        x_boxInt_br = np.min([x_boxTrue_br,x_boxPred_br])
-        y_boxInt_br = np.min([y_boxTrue_br,y_boxPred_br]) 
+#         # boxInt - bottom right coords
+#         x_boxInt_br = np.min([x_boxTrue_br,x_boxPred_br])
+#         y_boxInt_br = np.min([y_boxTrue_br,y_boxPred_br]) 
 
-        # Calculate the area of boxInt, i.e. the area of the intersection 
-        # between boxTrue and boxPred.
-        # The np.max() function forces the intersection area to 0 if the boxes don't overlap.
+#         # Calculate the area of boxInt, i.e. the area of the intersection 
+#         # between boxTrue and boxPred.
+#         # The np.max() function forces the intersection area to 0 if the boxes don't overlap.
         
         
-        # Version 2 revision
-        area_of_intersection = \
-        np.max([0,(x_boxInt_br - x_boxInt_tleft)]) * np.max([0,(y_boxInt_br - y_boxInt_tleft)])
+#         # Version 2 revision
+#         area_of_intersection = \
+#         np.max([0,(x_boxInt_br - x_boxInt_tleft)]) * np.max([0,(y_boxInt_br - y_boxInt_tleft)])
 
-        iou = area_of_intersection / ((area_boxTrue + area_boxPred) - area_of_intersection)
+#         iou = area_of_intersection / ((area_boxTrue + area_boxPred) - area_of_intersection)
 
 
-        # This must match the type used in py_func
-        iou = iou.astype(np.float32)
+#         # This must match the type used in py_func
+#         iou = iou.astype(np.float32)
         
-        # append the result to a list at the end of each loop
-        results.append(iou)
+#         # append the result to a list at the end of each loop
+#         results.append(iou)
     
-    # return the mean IoU score for the batch
-    return np.mean(results)
-y_true = np.array([[1,5,2,3,0.5], [1,5,2,3,0.5], [1,5,2,3,0.5]])
-y_pred = np.array([[2,4,3,3,0.7], [2,4,3,3,0.7], [2,4,3,3,0.7]])
+#     # return the mean IoU score for the batch
+#     return np.mean(results)
+# y_true = np.array([[1,5,2,3,0.5], [1,5,2,3,0.5], [1,5,2,3,0.5]])
+# y_pred = np.array([[2,4,3,3,0.7], [2,4,3,3,0.7], [2,4,3,3,0.7]])
 
-print(y_true.shape)
-result = calculate_iou(y_true, y_pred)
+# print(y_true.shape)
+# result = calculate_iou(y_true, y_pred)
 
-print(result)
-print(type(result))
+# print(result)
+# print(type(result))
 
-y_true = np.array([[1,5,3,8], [1,5,3,8], [1,5,3,8]])
-y_pred = np.array([[2,4,5,7], [2,4,5,7], [2,4,5,7]])
+# y_true = np.array([[1,5,3,8], [1,5,3,8], [1,5,3,8]])
+# y_pred = np.array([[2,4,5,7], [2,4,5,7], [2,4,5,7]])
 
-results =[]
-for i in range(0, y_true.shape[0]):
-        y_true = y_true.astype(np.float32)
-        y_pred = y_pred.astype(np.float32)
+# results =[]
+# for i in range(0, y_true.shape[0]):
+#         y_true = y_true.astype(np.float32)
+#         y_pred = y_pred.astype(np.float32)
 
-        # set the types so we are sure what type we are using
-        true_left_x = y_true[i,0] * (y_true[i, 2]- y_true[i, 0]) #2
-        true_left_y = y_true[i,1] * (y_true[i, 3]- y_true[i, 1])
-        true_right_x = y_true[i,2] * (y_true[i, 2]- y_true[i, 0]) #6
-        true_right_y = y_true[i,3] * (y_true[i, 3]- y_true[i, 1])
+#         # set the types so we are sure what type we are using
+#         true_left_x = y_true[i,0] * (y_true[i, 2]- y_true[i, 0]) #2
+#         true_left_y = y_true[i,1] * (y_true[i, 3]- y_true[i, 1])
+#         true_right_x = y_true[i,2] * (y_true[i, 2]- y_true[i, 0]) #6
+#         true_right_y = y_true[i,3] * (y_true[i, 3]- y_true[i, 1])
 
-        print("test1: ",true_left_x, true_left_y, true_right_x, true_right_y)
+#         print("test1: ",true_left_x, true_left_y, true_right_x, true_right_y)
 
-        pred_left_x = y_pred[i,0] * (y_pred[i, 2]- y_pred[i, 0]) # 6
-        pred_left_y = y_pred[i,1] * (y_pred[i, 3]- y_pred[i, 1])
-        pred_right_x = y_pred[i,2] * (y_pred[i, 2]- y_pred[i, 0]) # 15
-        pred_right_y = y_pred[i,3] * (y_pred[i, 3]- y_pred[i, 1])
-        print('정체를 밝혀라',pred_right_x)
+#         pred_left_x = y_pred[i,0] * (y_pred[i, 2]- y_pred[i, 0]) # 6
+#         pred_left_y = y_pred[i,1] * (y_pred[i, 3]- y_pred[i, 1])
+#         pred_right_x = y_pred[i,2] * (y_pred[i, 2]- y_pred[i, 0]) # 15
+#         pred_right_y = y_pred[i,3] * (y_pred[i, 3]- y_pred[i, 1])
+#         print('정체를 밝혀라',pred_right_x)
 
-        gt_box_area = ( (true_right_x) - true_left_x) * ( (true_right_y) - true_left_y) 
-        pred_box_area = ( (pred_right_x) - pred_left_x) * ( (pred_right_y) - pred_left_y)
-        print(gt_box_area, pred_box_area)
+#         gt_box_area = ( (true_right_x) - true_left_x) * ( (true_right_y) - true_left_y) 
+#         pred_box_area = ( (pred_right_x) - pred_left_x) * ( (pred_right_y) - pred_left_y)
+#         print(gt_box_area, pred_box_area)
 
-        # calculate the top left and bottom right coordinates for the intersection box, boxInt
+#         # calculate the top left and bottom right coordinates for the intersection box, boxInt
 
-        # boxInt - top left coords
-        x_boxInt_tleft = np.max([ true_left_x, pred_left_x ])
-        y_boxInt_tleft = np.max([true_left_y, pred_left_y ]) # Version 2 revision
+#         # boxInt - top left coords
+#         x_boxInt_tleft = np.max([ true_left_x, pred_left_x ])
+#         y_boxInt_tleft = np.max([true_left_y, pred_left_y ]) # Version 2 revision
 
-        # boxInt - bottom right coords
-        x_boxInt_br = np.min([true_right_x,pred_right_x ]) # 15 
-        y_boxInt_br = np.min([true_right_y,pred_right_y]) 
+#         # boxInt - bottom right coords
+#         x_boxInt_br = np.min([true_right_x,pred_right_x ]) # 15 
+#         y_boxInt_br = np.min([true_right_y,pred_right_y]) 
 
-        # Calculate the area of boxInt, i.e. the area of the intersection 
-        # between boxTrue and boxPred.
-        # The np.max() function forces the intersection area to 0 if the boxes don't overlap.
-
-
-        # Version 2 revision
-        area_of_intersection = np.max([0,(x_boxInt_br - x_boxInt_tleft)]) * np.max([0,(y_boxInt_br - y_boxInt_tleft)])
-        print(x_boxInt_br, x_boxInt_tleft)
-        print('ab',np.max([0,(x_boxInt_br - x_boxInt_tleft)]))
-        print('aab',np.max([0,(y_boxInt_br - y_boxInt_tleft)]))
-        print('뭐야',area_of_intersection)
-
-        iou = area_of_intersection / ((gt_box_area + pred_box_area) - area_of_intersection)
+#         # Calculate the area of boxInt, i.e. the area of the intersection 
+#         # between boxTrue and boxPred.
+#         # The np.max() function forces the intersection area to 0 if the boxes don't overlap.
 
 
-        # This must match the type used in py_func
-        iou = iou.astype(np.float32)
+#         # Version 2 revision
+#         area_of_intersection = np.max([0,(x_boxInt_br - x_boxInt_tleft)]) * np.max([0,(y_boxInt_br - y_boxInt_tleft)])
+#         print(x_boxInt_br, x_boxInt_tleft)
+#         print('ab',np.max([0,(x_boxInt_br - x_boxInt_tleft)]))
+#         print('aab',np.max([0,(y_boxInt_br - y_boxInt_tleft)]))
+#         print('뭐야',area_of_intersection)
 
-        # append the result to a list at the end of each loop
-        results.append(iou)
+#         iou = area_of_intersection / ((gt_box_area + pred_box_area) - area_of_intersection)
 
-# return the mean IoU score for the batch
-print('test : ',  np.mean(results))
 
-assert False
+#         # This must match the type used in py_func
+#         iou = iou.astype(np.float32)
+
+#         # append the result to a list at the end of each loop
+#         results.append(iou)
+
+# # return the mean IoU score for the batch
+# print('test : ',  np.mean(results))
 
 
 #prameter
@@ -204,6 +205,7 @@ ground_th_dir = "./sample/VOT19/car1/label/groundtruth.txt"
 ground_th = np.loadtxt(ground_th_dir, delimiter=',') #shape (742,8)
 
 
+
 #make label
 #label : score OR gt
 if train_label == 'score':
@@ -221,6 +223,112 @@ if train_label == 'gt':
         label = make_bbox_label(data_size,ground_th) # shape 742 x 4
 
 
+# Image show
+
+import matplotlib.pyplot as plt
+
+plt.rcParams['figure.figsize'] = (10, 10) # set figure size
+
+ 
+
+plt.imshow(x_images[0])
+
+plt.show()
+
+# #logistic loss
+# def logistic_fn(labels=None,logits=None):
+
+#     #convert tensor
+#     logits = ops.convert_to_tensor(logits, name="logits")
+#     #labels = tf.cast(logits, dtype=logits.dtype)
+#     labels = ops.convert_to_tensor(labels, name="labels", dtype=logits.dtype)
+
+#     # print("logits")
+#     # sess = tf.compat.v1.Session()
+#     # with sess.as_default():   # or `with sess:` to close on exit
+#     #     assert sess is tf.compat.v1.get_default_session()
+#     #     print(logits.eval())
+#     # print("labels")
+#     # with sess.as_default():   # or `with sess:` to close on exit
+#     #     assert sess is tf.compat.v1.get_default_session()
+#     #     print(labels.eval())        
+
+#     #zero tensor
+#     #for compared label value
+    
+#     zeros = array_ops.zeros_like(labels, dtype=logits.dtype)
+#     # print("zeros")
+#     # with sess.as_default():   # or `with sess:` to close on exit
+#     #     assert sess is tf.compat.v1.get_default_session()
+#     #     print(zeros.eval())     
+
+#     #If y_true value(+1) >= 0 --> true, 
+#     #Else value is  (-1) then false.
+     
+#     cond = (labels > zeros)
+#     # print("cond")
+#     # with sess.as_default():   # or `with sess:` to close on exit
+#     #     assert sess is tf.compat.v1.get_default_session()
+#     #     print(cond.eval()) 
+
+
+#     #used log(-yx) frame 
+#     # If cond (true) then -x, 
+#     # Else cond(False) then x 
+#     neg_abs_logits = array_ops.where(cond, -logits, logits)
+#     # print("cond")
+#     # with sess.as_default():   # or `with sess:` to close on exit
+#     #     assert sess is tf.compat.v1.get_default_session()
+#     #     print(neg_abs_logits.eval()) 
+
+#     return math_ops.log1p(math_ops.exp(neg_abs_logits))
+
+
+# #total loss function
+# def loss_fn(y_true, y_pred):
+    
+#     #use logistic_fn
+#     logistic = logistic_fn(labels=y_true, logits=y_pred)
+
+#     print("logistic")
+#     sess = tf.compat.v1.Session()
+#     with sess.as_default():   # or `with sess:` to close on exit
+#         assert sess is tf.compat.v1.get_default_session()
+#         print(logistic.eval())     
+
+#     loss = tf.reduce_sum(logistic, axis=[1,2])
+
+#     print("loss sum")
+#     with sess.as_default():   # or `with sess:` to close on exit
+#         assert sess is tf.compat.v1.get_default_session()
+#         print(loss.eval())  
+
+#     loss = tf.reduce_mean(loss)
+
+#     print("loss mean")
+#     with sess.as_default():   # or `with sess:` to close on exit
+#         assert sess is tf.compat.v1.get_default_session()
+#         print(loss.eval())      
+#     return loss
+
+# tt = tf.constant(value=200, shape=(2,17,17), dtype=tf.float32)
+
+# # sess = tf.compat.v1.Session()
+# # with sess.as_default():   # or `with sess:` to close on exit
+# #     assert sess is tf.compat.v1.get_default_session()
+# #     print(tt.eval())
+
+# test = loss_fn(label[0:2], tt)
+# # sess = tf.compat.v1.Session()
+# # with sess.as_default():   # or `with sess:` to close on exit
+# #     assert sess is tf.compat.v1.get_default_session()
+# #     print(test.eval())
+
+# #     print(test.shape)
+
+
+
+assert False
 
 #!----train start
 model = siameFc_model(X_SHAPE,Z_SHAPE, train_label)
