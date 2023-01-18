@@ -65,17 +65,23 @@ tf.compat.v1.disable_eager_execution()
 #     assert sess is tf.compat.v1.get_default_session()
 #     print(test1.eval())
 
+import matplotlib.pyplot as plt
 from PIL import Image
-img = Image.open('./sample/VOT19/car1/z/00000001.jpg')
+import io
+# img = Image.open('./sample/VOT19/car1/z/00000001.jpg')
+with open('./sample/VOT19/car1/z/00000001.jpg', "rb") as f:
+        img = Image.open(io.BytesIO(f.read()))
+im2arr = np.array(img)
+test = tf.image.resize_with_crop_or_pad(im2arr, 255,255)
+print(test.shape)
+test = test.eval(session=tf.compat.v1.Session())
 
-plt.show(img)
-# img = tf.keras.utils.load_img('./sample/VOT19/car1/z/00000001.jpg')
-# img = tf.convert_to_tensor(img)
-# test = tf.image.crop_to_bounding_box(img,0,0,255,255)
-# plt.imshow(test)
+image = tf.keras.utils.array_to_img(test)
+plt.figure()
+plt.imshow(image)
+plt.show()
+assert False
 
-# plt.imshow(x_images[0])
-sess = tf.compat.v1.Session()
 # with sess.as_default():   # or `with sess:` to close on exit
 #     assert sess is tf.compat.v1.get_default_session()
 #     print(test.eval())
