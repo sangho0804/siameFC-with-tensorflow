@@ -65,6 +65,80 @@ tf.compat.v1.disable_eager_execution()
 #     assert sess is tf.compat.v1.get_default_session()
 #     print(test1.eval())
 
+CROP_SIZE = (255, 255)
+
+import matplotlib.pyplot as plt
+from PIL import Image
+import io
+box = [246.13,162.64,357.02,279.72]
+box_indices = tf.random.uniform(shape=(1,), minval=0, maxval=1, dtype=tf.int32)
+# img = Image.open('./sample/VOT19/car1/z/00000001.jpg')
+with open('./sample/VOT19/car1/z/00000001.jpg', "rb") as f:
+        img = Image.open(io.BytesIO(f.read()))
+im2arr = np.array(img)
+
+
+print(im2arr.shape)
+
+w, h, c = im2arr.shape
+
+x1, y1, x3, y3 = box
+
+center_x , center_y = ((x3+x1)/2, (y3+y1)/2)
+center_x, center_y = int(center_x), int(center_y)
+
+print(center_x, center_y)
+
+new_img = np.zeros([255,255,3])
+
+
+im2arr = im2arr[center_x-int(255/2) : center_x +int(255/2)+1, center_y-int(255/2) : center_y +int(255/2)+1, : ]
+
+
+
+
+# for i in range(0, 3):
+#         for j in range(0,255):
+                
+#                 if j - int(255/2) < 0:
+#                         pix_j = j - int(255/2)
+
+#                 if j - int(255/2) == 0:
+#                         pix_j = 0
+
+#                 if j - int(255/2) > 0:
+#                         pix_j = j + int(255/2)
+                
+                
+#                 for k in range(0,255):
+#                         if j - int(255/2) < 0:
+#                                 pix_k = k - int(255/2)
+#                         if j - int(255/2) == 0:
+#                                 pix_k = 0                        
+#                         if k - int(255/2) > 0:
+#                                 pix_k = k + int(255/2)
+
+#                         if center_x + pix_j > -1 and center_x + pix_j < 481 and center_y + pix_k > -1 and center_y + pix_k < 641:
+#                                 org_x = (center_x + pix_j)
+#                                 org_y = (center_y + pix_k)
+#                                 #print(org_x, org_y)
+#                                 #print(org_x, org_y)
+#                                 new_img[j,k,i] = im2arr[org_x, org_y,i]
+
+
+
+
+
+
+#new_img = new_img.eval(session=tf.compat.v1.Session())
+image = tf.keras.utils.array_to_img(im2arr)
+plt.figure()
+plt.imshow(image)
+plt.show()
+
+
+assert False
+
 import matplotlib.pyplot as plt
 from PIL import Image
 import io
