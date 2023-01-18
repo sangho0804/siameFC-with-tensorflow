@@ -14,6 +14,164 @@ from tensorflow.python.ops import math_ops
 from tensorflow.python.framework import ops
 tf.compat.v1.disable_eager_execution()
 
+
+# #prameter
+# Z_SHAPE = (127, 127, 3)
+# X_SHAPE = (255, 255, 3)
+
+# response_size = 17 #score map size
+# final_stride = 8 
+
+# #train Kinds
+# '''!---- check the train_label ------!'''
+# train_label = 'score' #'score' OR 'gt'
+
+
+# #data path 
+# x_dir = "./sample/VOT19/car1/x/" #number of 742
+# z_dir = "./sample/VOT19/car1/z/" #number of 1
+
+
+# #img name list
+# x_name_lsit = os.listdir(x_dir)
+# z_name_lsit = os.listdir(z_dir)
+
+
+# #make image list
+# data_size = len(os.listdir(x_dir)) #VOT car1 data_size : 742
+
+# x_images = load_images(x_dir, x_name_lsit, 255, data_size, input='x')
+# z_images = load_images(z_dir, z_name_lsit, 127, data_size, input='z')
+
+#246.13, 162.64,    362.69, 168.59,    357.02, 279.72, 240.46, 273.77
+
+# w =  357.02 - 246.13  
+# h = 279.72 - 162.64
+
+# x = 4 * (127*127) / ( (3 * w + h) * (w + 3 * h) )
+
+# print(x)
+# test = tf.math.sqrt(x)
+# sess = tf.compat.v1.Session()
+# with sess.as_default():   # or `with sess:` to close on exit
+#     assert sess is tf.compat.v1.get_default_session()
+#     print(test.eval())
+
+
+# test1 = 640 * test
+
+# sess = tf.compat.v1.Session()
+# with sess.as_default():   # or `with sess:` to close on exit
+#     assert sess is tf.compat.v1.get_default_session()
+#     print(test1.eval())
+
+from PIL import Image
+img = Image.open('./sample/VOT19/car1/z/00000001.jpg')
+
+plt.show(img)
+# img = tf.keras.utils.load_img('./sample/VOT19/car1/z/00000001.jpg')
+# img = tf.convert_to_tensor(img)
+# test = tf.image.crop_to_bounding_box(img,0,0,255,255)
+# plt.imshow(test)
+
+# plt.imshow(x_images[0])
+sess = tf.compat.v1.Session()
+# with sess.as_default():   # or `with sess:` to close on exit
+#     assert sess is tf.compat.v1.get_default_session()
+#     print(test.eval())
+
+# image = tf.constant(np.arange(1, 28, dtype=np.float32), shape=[3, 3, 3])
+# with sess.as_default():   # or `with sess:` to close on exit
+#     assert sess is tf.compat.v1.get_default_session()
+#     print(image[:,:,0].eval())
+# cropped_image = tf.image.crop_to_bounding_box(image, 0, 0, 2, 2)
+# with sess.as_default():   # or `with sess:` to close on exit
+#     assert sess is tf.compat.v1.get_default_session()
+#     print(cropped_image[:,:,0].eval())
+
+
+# test = tf.image.resize_with_crop_or_pad(x_images[0], )
+
+assert False
+
+#data normalization
+x_images = x_images / 255.
+z_images = z_images / 255.
+
+
+#ground truth
+ground_th_dir = "./sample/VOT19/car1/label/groundtruth.txt"
+ground_th = np.loadtxt(ground_th_dir, delimiter=',') #shape (742,8)
+
+
+
+#make label
+#label : score OR gt
+if train_label == 'score':
+
+        #original image size
+        org_img = image_utils.load_img(x_dir + x_name_lsit[0])
+        org_img_tensor = image_utils.array_to_img(org_img)
+        org_img_size = org_img_tensor.size #VOT img size : 640x480
+
+        
+        label = make_ground_th_label(data_size,final_stride, response_size, ground_th, org_img_size) # shape 742 x 17 x 17
+
+if train_label == 'gt':
+
+        label = make_bbox_label(data_size,ground_th) # shape 742 x 4
+
+
+# Image show
+
+import matplotlib.pyplot as plt
+
+plt.rcParams['figure.figsize'] = (10, 10) # set figure size
+
+ 
+
+plt.imshow(x_images[0])
+
+plt.show()
+
+
+
+
+assert False
+#!----train start
+model = siameFc_model(X_SHAPE,Z_SHAPE, train_label)
+
+#model.summary()
+
+
+lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+    initial_learning_rate=1e-3,
+    decay_steps=1000,
+    decay_rate=0.9)
+opt = tf.keras.optimizers.legacy.SGD(learning_rate=lr_schedule)
+        
+model.compile(optimizer=opt, loss=loss_fn) # label : score
+# model.compile(optimizer=opt, loss='mse', metrics=['accuracy']) #label : gt
+
+batch_size = 8
+epochs = 50 
+
+model.load_weights('weight_gt.h5')
+
+
+#!----test tracking
+
+y_evaluate = model.evaluate([x_images, z_images], label, batch_size=8)
+
+print("check loss : ", y_evaluate)
+
+predict = model.predict([x_images, z_images])
+
+
+
+
+# !---------------------------IoU test start
+
 # def calculate_iou(y_true, y_pred):
     
     
@@ -165,76 +323,10 @@ tf.compat.v1.disable_eager_execution()
 # # return the mean IoU score for the batch
 # print('test : ',  np.mean(results))
 
-
-#prameter
-Z_SHAPE = (127, 127, 3)
-X_SHAPE = (255, 255, 3)
-
-response_size = 17 #score map size
-final_stride = 8 
-
-#train Kinds
-'''!---- check the train_label ------!'''
-train_label = 'score' #'score' OR 'gt'
+# !---------------------------IoU test end
 
 
-#data path 
-x_dir = "./sample/VOT19/car1/x/" #number of 742
-z_dir = "./sample/VOT19/car1/z/" #number of 1
-
-
-#img name list
-x_name_lsit = os.listdir(x_dir)
-z_name_lsit = os.listdir(z_dir)
-
-
-#make image list
-data_size = len(os.listdir(x_dir)) #VOT car1 data_size : 742
-
-x_images = load_images(x_dir, x_name_lsit, 255, data_size, input='x')
-z_images = load_images(z_dir, z_name_lsit, 127, data_size, input='z')
-
-
-#data normalization
-x_images = x_images / 255.
-z_images = z_images / 255.
-
-
-#ground truth
-ground_th_dir = "./sample/VOT19/car1/label/groundtruth.txt"
-ground_th = np.loadtxt(ground_th_dir, delimiter=',') #shape (742,8)
-
-
-
-#make label
-#label : score OR gt
-if train_label == 'score':
-
-        #original image size
-        org_img = image_utils.load_img(x_dir + x_name_lsit[0])
-        org_img_tensor = image_utils.array_to_img(org_img)
-        org_img_size = org_img_tensor.size #VOT img size : 640x480
-
-        
-        label = make_ground_th_label(data_size,final_stride, response_size, ground_th, org_img_size) # shape 742 x 17 x 17
-
-if train_label == 'gt':
-
-        label = make_bbox_label(data_size,ground_th) # shape 742 x 4
-
-
-# Image show
-
-import matplotlib.pyplot as plt
-
-plt.rcParams['figure.figsize'] = (10, 10) # set figure size
-
- 
-
-plt.imshow(x_images[0])
-
-plt.show()
-
+# !---------------------------loss test start
 # #logistic loss
 # def logistic_fn(labels=None,logits=None):
 
@@ -326,40 +418,10 @@ plt.show()
 
 # #     print(test.shape)
 
+# !---------------------------loss test end
 
 
-assert False
-
-#!----train start
-model = siameFc_model(X_SHAPE,Z_SHAPE, train_label)
-
-#model.summary()
-
-
-lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
-    initial_learning_rate=1e-3,
-    decay_steps=1000,
-    decay_rate=0.9)
-opt = tf.keras.optimizers.legacy.SGD(learning_rate=lr_schedule)
-        
-model.compile(optimizer=opt, loss=loss_fn) # label : score
-# model.compile(optimizer=opt, loss='mse', metrics=['accuracy']) #label : gt
-
-batch_size = 8
-epochs = 50 
-
-model.load_weights('weight_gt.h5')
-
-
-#!----test tracking
-
-y_evaluate = model.evaluate([x_images, z_images], label, batch_size=8)
-
-print("check loss : ", y_evaluate)
-
-predict = model.predict([x_images, z_images])
-
-# !---------------------------보류용
+# !--------------------------- tracking 확인 보류용
 
 # b, w, h = predict.shape
 
@@ -444,4 +506,4 @@ predict = model.predict([x_images, z_images])
 
 # img_show(["Original", "Drawing"], [cv2_image, drawing_image])
 
-# !---------------------------보류용
+# !---------------------------tracking 확인 보류용

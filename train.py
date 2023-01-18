@@ -77,9 +77,9 @@ radius = 16
 #train Kinds
 '''!---- check the train_label ------!'''
 train_label = 'score' #'score' OR 'gt'
-gt_val = 'center'     #'corner' OR 'cneter' 
+gt_val = 'center'     # bbox is 'corner' OR 'cneter' 
 
-#data path liverRun
+#data path
 x_dir = "./sample/VOT19/car1/x/"
 z_dir = "./sample/VOT19/car1/z/"
 
@@ -96,11 +96,11 @@ data_size = len(os.listdir(x_dir)) #- 19700
 x_images = load_images(x_dir, x_name_lsit, 255, data_size, input='x')
 z_images = load_images(z_dir, z_name_lsit, 127, data_size, input='z')
 
-print(x_images[0])
 
 #data normalization
 x_images = x_images / 255.
 z_images = z_images / 255.
+
 
 
 #ground truth
@@ -125,6 +125,12 @@ if train_label == 'score':
 
 if train_label == 'gt':
         label = make_bbox_label(data_size,ground_th, gt_val)
+
+
+
+
+
+
 
 
 #!----train start
